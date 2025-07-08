@@ -172,7 +172,7 @@ export class PolicyController {
         return;
       }
 
-      // Validate permissions structure
+      // Validate permissions structure and values
       const isValidPermissions = permissions.every(permission => 
         permission.resource && permission.action && 
         typeof permission.resource === 'string' && 
@@ -183,6 +183,17 @@ export class PolicyController {
         res.status(400).json({
           success: false,
           error: 'Each permission must have resource and action strings'
+        });
+        return;
+      }
+
+      // Validate permission enum values
+      const invalidPermissions = permissions.filter(permission => !validatePermission(permission));
+      if (invalidPermissions.length > 0) {
+        const invalidPermission = invalidPermissions[0];
+        res.status(400).json({
+          success: false,
+          error: `Invalid permission: resource must be one of [users, groups, policies, access-requests] and action must be one of [create, read, update, delete]. Found: ${invalidPermission.resource}:${invalidPermission.action}`
         });
         return;
       }
@@ -297,6 +308,17 @@ export class PolicyController {
           res.status(400).json({
             success: false,
             error: 'Each permission must have resource and action strings'
+          });
+          return;
+        }
+
+        // Validate permission enum values
+        const invalidPermissions = permissions.filter(permission => !validatePermission(permission));
+        if (invalidPermissions.length > 0) {
+          const invalidPermission = invalidPermissions[0];
+          res.status(400).json({
+            success: false,
+            error: `Invalid permission: resource must be one of [users, groups, policies, access-requests] and action must be one of [create, read, update, delete]. Found: ${invalidPermission.resource}:${invalidPermission.action}`
           });
           return;
         }

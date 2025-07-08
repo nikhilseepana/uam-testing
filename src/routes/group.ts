@@ -18,26 +18,73 @@ const router = Router();
  *   schemas:
  *     Group:
  *       type: object
+ *       required:
+ *         - id
+ *         - name
+ *         - policies
+ *         - createdAt
+ *         - updatedAt
  *       properties:
  *         id:
  *           type: string
- *           description: Unique identifier
+ *           description: Unique identifier (REQUIRED)
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
  *         name:
  *           type: string
- *           description: Group name
+ *           description: Group name (REQUIRED) - Must be unique
+ *           example: "Administrators"
+ *           minLength: 3
+ *           maxLength: 100
  *         policies:
  *           type: array
  *           items:
  *             type: string
- *           description: Array of policy IDs
+ *           description: Array of policy IDs (REQUIRED) - Can be empty array
+ *           example: ["policy-id-1", "policy-id-2"]
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: Creation timestamp
+ *           description: Creation timestamp (REQUIRED)
+ *           example: "2025-07-08T10:30:00.000Z"
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           description: Last update timestamp
+ *           description: Last update timestamp (REQUIRED)
+ *           example: "2025-07-08T10:30:00.000Z"
+ *     GroupCreate:
+ *       type: object
+ *       required:
+ *         - name
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: Group name (REQUIRED) - Must be unique, 3-100 characters
+ *           example: "Administrators"
+ *           minLength: 3
+ *           maxLength: 100
+ *           pattern: '^[a-zA-Z0-9\\s\\-_]+$'
+ *         policies:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: Array of policy IDs (OPTIONAL) - Must be valid policy IDs
+ *           example: ["policy-id-1", "policy-id-2"]
+ *     GroupUpdate:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: Group name (OPTIONAL) - Must be unique if provided, 3-100 characters
+ *           example: "Updated Administrators"
+ *           minLength: 3
+ *           maxLength: 100
+ *           pattern: '^[a-zA-Z0-9\\s\\-_]+$'
+ *         policies:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: Array of policy IDs (OPTIONAL) - Must be valid policy IDs if provided
+ *           example: ["policy-id-1", "policy-id-3"]
  */
 
 // Get all groups - requires groups:read permission

@@ -31,6 +31,105 @@ const options = {
           description: 'Enter JWT token received from login endpoint'
         }
       },
+      schemas: {
+        UserRole: {
+          type: 'string',
+          enum: ['admin', 'maintainer', 'user'],
+          description: 'User role with specific permissions',
+          example: 'user',
+          'x-enum-descriptions': {
+            admin: 'Full system access - can manage all users, groups, policies, and access requests',
+            maintainer: 'Limited admin access - can manage users and groups but not policies',
+            user: 'Standard user access - can view data and create access requests'
+          }
+        },
+        AccessRequestStatus: {
+          type: 'string',
+          enum: ['pending', 'approved', 'denied'],
+          description: 'Status of an access request',
+          example: 'pending',
+          'x-enum-descriptions': {
+            pending: 'Request is waiting for approval',
+            approved: 'Request has been approved and access granted',
+            denied: 'Request has been denied'
+          }
+        },
+        AccessRequestProcessStatus: {
+          type: 'string',
+          enum: ['approved', 'denied'],
+          description: 'Status when processing an access request (cannot be pending)',
+          example: 'approved',
+          'x-enum-descriptions': {
+            approved: 'Approve the access request and grant access',
+            denied: 'Deny the access request'
+          }
+        },
+        PermissionResource: {
+          type: 'string',
+          enum: ['users', 'groups', 'policies', 'access-requests'],
+          description: 'Resource that can be accessed with permissions',
+          example: 'users',
+          'x-enum-descriptions': {
+            users: 'User management operations',
+            groups: 'Group management operations',
+            policies: 'Policy management operations',
+            'access-requests': 'Access request management operations'
+          }
+        },
+        PermissionAction: {
+          type: 'string',
+          enum: ['create', 'read', 'update', 'delete'],
+          description: 'Action that can be performed on a resource',
+          example: 'read',
+          'x-enum-descriptions': {
+            create: 'Create new entities',
+            read: 'View existing entities',
+            update: 'Modify existing entities',
+            delete: 'Remove entities'
+          }
+        },
+        ValidationErrorResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false
+            },
+            error: {
+              type: 'string',
+              example: 'Username, email, firstName, lastName, password, and role are required'
+            },
+            details: {
+              type: 'object',
+              properties: {
+                missingFields: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  },
+                  example: ['email', 'firstName']
+                },
+                invalidFields: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      field: {
+                        type: 'string',
+                        example: 'email'
+                      },
+                      message: {
+                        type: 'string',
+                        example: 'Invalid email format'
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       responses: {
         UnauthorizedError: {
           description: 'Authentication information is missing or invalid',
@@ -73,19 +172,51 @@ const options = {
           }
         },
         ValidationError: {
-          description: 'Invalid input data',
+          description: 'Invalid input data - Missing required fields or invalid field formats',
           content: {
             'application/json': {
               schema: {
-                type: 'object',
-                properties: {
-                  success: {
-                    type: 'boolean',
-                    example: false
-                  },
-                  error: {
-                    type: 'string',
-                    example: 'Required fields are missing'
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              },
+              examples: {
+                missingFields: {
+                  summary: 'Missing required fields',
+                  value: {
+                    success: false,
+                    error: 'Username, email, firstName, lastName, password, and role are required',
+                    details: {
+                      missingFields: ['email', 'firstName', 'lastName']
+                    }
+                  }
+                },
+                invalidEmail: {
+                  summary: 'Invalid email format',
+                  value: {
+                    success: false,
+                    error: 'Invalid email format',
+                    details: {
+                      invalidFields: [
+                        {
+                          field: 'email',
+                          message: 'Invalid email format'
+                        }
+                      ]
+                    }
+                  }
+                },
+                invalidPassword: {
+                  summary: 'Invalid password',
+                  value: {
+                    success: false,
+                    error: 'Password must be at least 8 characters long',
+                    details: {
+                      invalidFields: [
+                        {
+                          field: 'password',
+                          message: 'Password must be at least 8 characters long'
+                        }
+                      ]
+                    }
                   }
                 }
               }
