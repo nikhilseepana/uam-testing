@@ -1,0 +1,75 @@
+{
+  "azure": {
+    "deployment": {
+      "resourceGroup": "uam-api-rg",
+      "location": "East US",
+      "appServicePlan": "uam-api-plan",
+      "sku": "B1",
+      "runtime": "NODE|18-lts"
+    },
+    
+    "security": {
+      "httpsOnly": true,
+      "minTlsVersion": "1.2",
+      "ftpsState": "Disabled",
+      "authEnabled": false,
+      "cors": {
+        "allowedOrigins": ["*"],
+        "supportCredentials": false
+      }
+    },
+    
+    "monitoring": {
+      "applicationInsights": {
+        "enabled": true,
+        "retentionInDays": 30
+      },
+      "logging": {
+        "level": "info",
+        "httpLogging": true,
+        "detailedErrors": true,
+        "failedRequestTracing": true
+      }
+    },
+    
+    "scaling": {
+      "autoScale": false,
+      "minInstances": 1,
+      "maxInstances": 3,
+      "scaleOutCpuThreshold": 70,
+      "scaleInCpuThreshold": 20
+    },
+    
+    "database": {
+      "type": "file-based",
+      "persistentStorage": true,
+      "backupEnabled": true,
+      "backupRetentionDays": 7
+    }
+  },
+  
+  "environment": {
+    "production": {
+      "nodeEnv": "production",
+      "logLevel": "warn",
+      "rateLimiting": {
+        "enabled": true,
+        "windowMs": 900000,
+        "max": 100
+      },
+      "security": {
+        "helmet": true,
+        "cors": true,
+        "jwtExpiry": "24h"
+      }
+    }
+  },
+  
+  "deployment": {
+    "buildCommand": "npm run build",
+    "startCommand": "npm start",
+    "healthCheckPath": "/health",
+    "warmupRequests": 3,
+    "healthCheckTimeout": 30
+  }
+}

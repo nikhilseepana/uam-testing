@@ -8,9 +8,16 @@
     "dev": "nodemon",
     "build": "tsc",
     "test": "jest",
+    "test:ci": "jest --ci --coverage --watchAll=false --reporters=default --reporters=jest-junit",
     "docs": "swagger-jsdoc -d swaggerDef.js -o swagger.json",
     "azure:build": "npm ci && npm run build",
-    "azure:start": "npm start"
+    "azure:start": "npm start",
+    "azure:deploy": "chmod +x deploy-azure.sh && ./deploy-azure.sh",
+    "azure:container:build": "docker build -t uam-api:latest .",
+    "azure:container:run": "docker run -p 3000:3000 uam-api:latest",
+    "azure:arm:deploy": "az deployment group create --resource-group uam-api-rg --template-file azure-arm-template.json",
+    "azure:logs": "az webapp log tail --resource-group uam-api-rg --name $(az webapp list --resource-group uam-api-rg --query '[0].name' -o tsv)",
+    "azure:health-check": "curl -f $(az webapp show --resource-group uam-api-rg --name $(az webapp list --resource-group uam-api-rg --query '[0].name' -o tsv) --query 'defaultHostName' -o tsv | sed 's/^/https:\\/\\//g')/health"
   },
   "keywords": ["express", "typescript", "jwt", "uam", "api"],
   "author": "Developer",
