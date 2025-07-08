@@ -1,0 +1,13 @@
+version: 1.0.0
+runtime:
+  os: linux
+  versions:
+    node: 18
+deploy:
+  path: .
+  
+startup:
+  commands:
+    - npm ci
+    - npm run build
+    - npm start
