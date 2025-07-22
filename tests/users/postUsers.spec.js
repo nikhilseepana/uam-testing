@@ -1,16 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { getAccessToken } from "../utils/getAccessToken";
 
 let accessToken;
 let newUserId;
 
 test.beforeAll(async ({ request }) => {
-  const response = await request.post("http://localhost:3000/api/auth/login", {
-    data: { username: "admin@example.com", password: "pa$$w0rd" },
-  });
-  const body = await response.json();
-  const { data } = body;
-  const { token } = data;
-  accessToken = token;
+  accessToken = await getAccessToken({request});
 });
 
 test.describe("postUsers", () => {

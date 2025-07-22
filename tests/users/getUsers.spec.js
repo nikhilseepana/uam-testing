@@ -1,18 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { validateEmail } from "../utils/validateEmail";
+import { getAccessToken } from "../utils/getAccessToken";
 
 let accessToken;
 
 test.beforeAll(async ({ request }) => {
-  const response = await request.post("http://localhost:3000/api/auth/login", {
-    data: {
-      username: "admin@example.com",
-      password: "pa$$w0rd",
-    },
-  });
-  const body = await response.json();
-  const { data } = body;
-  const { token } = data;
-  accessToken = token;
+  accessToken = await getAccessToken({ request });
 });
 
 test.describe("Get Users", () => {
@@ -76,7 +69,7 @@ test.describe("Get Users", () => {
 
       expect(email).toBeDefined();
       expect(typeof email).toBe("string");
-      expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+      expect(validateEmail(email)).toBeTruthy();
 
       expect(firstName).toBeDefined();
       expect(typeof firstName).toBe("string");

@@ -1,20 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { response } from "express";
-import { assertEmail } from "../users/utils/validateEmail";
+import { getAccessToken } from "../utils/getAccessToken";
+import { validateEmail } from "../utils/validateEmail";
 let accessToken;
 let newUserId;
 
 test.beforeAll(async ({ request }) => {
-  const response = await request.post("http://localhost:3000/api/auth/login", {
-    data: {
-      username: "admin@example.com",
-      password: "pa$$w0rd",
-    },
-  });
-  const body = await response.json();
-  const { data } = body;
-  const { token } = data;
-  accessToken = token;
+  accessToken = await getAccessToken({ request });
 });
 
 test.describe("Put Users", () => {
@@ -95,7 +87,7 @@ test.describe("Put Users", () => {
     expect(username).toBeDefined();
     expect(typeof username).toBe("string");
 
-    assertEmail(email, expect);
+    expect(validateEmail(email)).toBeTruthy();
 
     expect(typeof firstName).toBe("string");
     expect(typeof lastName).toBe("string");
@@ -182,5 +174,4 @@ test.describe("Put Users", () => {
     expect(success).toBeFalsy();
     expect(error).toContain("User not found");
   });
-
 });
