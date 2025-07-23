@@ -1,71 +1,88 @@
 import { test, expect } from "@playwright/test";
-import { response } from "express";
 import { getAccessToken } from "../utils/getAccessToken";
+import { validateUUID } from "../utils/validateUUID";
 import { validateEmail } from "../utils/validateEmail";
 let accessToken;
 let newUserId;
 
 test.beforeAll(async ({ request }) => {
   accessToken = await getAccessToken({ request });
+
+  const payload = {
+    username: "nikhilseepana",
+    email: "nikhil.seepana@example.com",
+    firstName: "nikhil",
+    lastName: "seepana",
+    password: "securePassword@123",
+    role: "user",
+  };
+
+  const response = await request.post("http://localhost:3000/api/users", {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    data: payload,
+  });
+  const body = await response.json();
+  const { data } = body;
+  const { id } = data;
+  newUserId = id;
 });
 
-test.describe("Put Users", () => {
-  test("should response 401 if token is missing", async ({ request }) => {
+test.describe("putUsers", () => {
+  test("should get response as 401 without token", async ({ request }) => {
     //arrange
-    const newUserId = "550e8400-e29b-41d4-a716-446655440000";
-    const payload = {
-      firstName: "John Updated",
-      lastName: "Doe Updated",
-    };
     //act
     const response = await request.put(
-      "http://localhost:3000/api/users/e497cc5b-23c9-4ab4-863d-dd932ca2e0fb",
+      `http://localhost:3000/api/users/${newUserId}`,
       {
         headers: {
-          "Content-Type": "Application/json",
+          "Content-Type": "application/json",
         },
-        data: payload,
       }
     );
     //assert
+    const body = await response.json();
     expect(response.status()).toBe(401);
 
-    const body = await response.json();
-
     const { success, error } = body;
-
     expect(success).toBeFalsy();
-    expect(error).toContain("No authorization header provided");
+    expect(error).toBe("No authorization header provided");
   });
 
-  test("when user is successfully updated with proper body then response should be 200 OK", async ({
+  test("should get response as 200 when body is updated", async ({
     request,
   }) => {
     //arrange
-    const newUserId = "550e8400-e29b-41d4-a716-446655440000";
     const payload = {
-      firstName: "John Updated",
-      lastName: "Doe Updated",
+      username: "nikhilseepana",
+      email: "nikhil.seepana@example.com",
+      firstName: "Gayatri",
+      lastName: "konni",
+      password: "securePassword@123",
+      role: "user",
     };
     //act
     const response = await request.put(
-      "http://localhost:3000/api/users/e497cc5b-23c9-4ab4-863d-dd932ca2e0fb",
+      `http://localhost:3000/api/users/${newUserId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "Application/json",
+          "Content-Type": "application/json",
         },
         data: payload,
       }
     );
     //assert
-    const availbleRoles = ["admin", "maintainer", "user"];
-
     const body = await response.json();
     expect(response.status()).toBe(200);
+
     const { success, data } = body;
     expect(success).toBeTruthy();
-    expect(Array.isArray(data)).toBeFalsy();
+
+    const availbleRoles = ["admin", "maintainer", "user"];
+
     const {
       id,
       username,
@@ -78,56 +95,40 @@ test.describe("Put Users", () => {
       updatedAt,
     } = data;
 
-    expect(id).toBeDefined();
     expect(typeof id).toBe("string");
-    expect(id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    ); // check for UUID
+    expect(validateUUID(id)).toBeTruthy();
 
-    expect(username).toBeDefined();
-    expect(typeof username).toBe("string");
+    expect(username).toBe("nikhilseepana");
 
     expect(validateEmail(email)).toBeTruthy();
 
-    expect(typeof firstName).toBe("string");
-    expect(typeof lastName).toBe("string");
+    expect(firstName).toBe("Gayatri");
+    expect(lastName).toBe("konni");
 
     expect(role).toBeDefined();
-    expect(typeof role).toBe("string");
+    expect(typeof role).toBe("string"); // check for enum [ admin, maintainer, user ]
     expect(availbleRoles.includes(role)).toBeTruthy();
 
     expect(Array.isArray(groups)).toBeTruthy();
-    for (const groupId of groups) {
-      expect(groupId).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-      );
-    }
-
+    
     expect(createdAt).toBeDefined();
-    expect(typeof createdAt).toBe("string");
     expect(new Date(createdAt).toString()).not.toBe("Invalid Date");
 
     expect(updatedAt).toBeDefined();
-    expect(typeof updatedAt).toBe("string");
     expect(new Date(updatedAt).toString()).not.toBe("Invalid Date");
+
   });
 
-  test("should return 400 bad request if missing proper body", async ({
-    request,
-  }) => {
+  test("should get 400 for invalid or missing fields", async ({ request }) => {
     //arrange
-    const newUserId = "550e8400-e29b-41d4-a716-446655440000";
     const payload = {
-      username: "john_doe_updated",
-      email: "john@example.com",
-      firstName: "John Updated",
-      lastName: "Doe Updated",
-      role: "maintainer",
-      groups: ["group-id-1", "group-id-3"],
+      username: "",
+      email: "anusha.gmail.com",
+      password: "123",
     };
     //act
     const response = await request.put(
-      `http://localhost:3000/api/users/e497cc5b-23c9-4ab4-863d-dd932ca2e0fb`,
+      `http://localhost:3000/api/users/${newUserId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -137,41 +138,47 @@ test.describe("Put Users", () => {
       }
     );
     //assert
+    const body =await response.json()
     expect(response.status()).toBe(400);
-    const body = await response.json();
 
-    const { success, error } = body;
+    const{success, error}=body;
 
     expect(success).toBeFalsy();
-    expect(error).toContain("Invalid group IDs: group-id-1, group-id-3");
+    expect(error).toBe("Username must be 3-50 characters long and contain only letters, numbers, and underscores");
+    
   });
 
-  test("should return 404 if user is not found", async ({ request }) => {
+  test("should return 404 when userId is invalid", async ({ request }) => {
     //arrange
-    const newUserId = "550e8400-e29b-41d4-a716-446655440003";
-    const payload = {
-      firstName: "John Updated",
-      lastName: "Doe Updated",
-    };
+    const fakeId = "00000000-0000-0000-0000-000000000000";
     //act
     const response = await request.put(
-      "http://localhost:3000/api/users/550e8400-e29b-41d4-a716-446655440003",
+      `http://localhost:3000/api/users/${fakeId}`,
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
-        data: payload,
       }
     );
-
-    //assert
-    expect(response.status()).toBe(404);
     const body = await response.json();
+    expect(response.status()).toBe(404);
 
     const { success, error } = body;
-
     expect(success).toBeFalsy();
-    expect(error).toContain("User not found");
+    expect(error).toBe("User not found");
   });
+});
+
+test.afterAll(async ({ request }) => {
+  const response = await request.delete(
+    `http://localhost:3000/api/users/${newUserId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  expect(response.status()).toBe(200);
 });
