@@ -26,6 +26,7 @@ test.describe("postUsers", () => {
   test("with token and proper body/post response should be 201", async ({
     request,
   }) => {
+    //arrange
     const payload = {
       username: "Gayatri_Konni",
       email: "gayatri.konni@example.com",
@@ -34,7 +35,7 @@ test.describe("postUsers", () => {
       password: "securePassword@123",
       role: "user",
     };
-
+//act
     const response = await request.post("http://localhost:3000/api/users", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -60,7 +61,7 @@ test.describe("postUsers", () => {
     } = data;
 
     newUserId = id;
-
+//assert
     expect(id).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
     );
