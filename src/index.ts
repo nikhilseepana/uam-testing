@@ -42,6 +42,14 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
   customSiteTitle: 'UAM API Documentation'
 }));
 
+
+// Serve raw OpenAPI JSON for tools like Postman
+app.get('/api/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpecs);
+});
+
+
 // API routes
 app.use('/api', routes);
 
